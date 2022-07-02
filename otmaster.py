@@ -1,3 +1,4 @@
+from distutils.log import error
 from PyQt5 import QtCore, QtGui, QtWidgets
 from MainWindow import Ui_MainWindow
 import pickle
@@ -27,10 +28,10 @@ class Person():
         self.name = name
         self.group = group
         self.hour_inputs = {}
+        # {date: [[datetime_start, datetime_end], [datetime_start, datetime_end], ...]}
         self.allotted_hours = 0.0
         self.allotted_ot = 0.0
         self.same_hours_as_group = True
-        # {date: [[datetime_start, datetime_end], [datetime_start, datetime_end], ...]}
     
     def get_total_hours(self, date1=None, date2=None):
         total_hours = datetime.timedelta(hours=0)
@@ -51,28 +52,48 @@ class Person():
                     for hour in hours:
                         total_hours += datetime.datetime.combine(date, hour[1]) - datetime.datetime.combine(date, hour[0])
         
-        return total_hours
+        total_ot = datetime.timedelta(hours=0)
+        if date1 is None:
+            # Get total ot for all time
+            for date, hours in self.hour_inputs.items():
+                for hour in hours:
+                    total_ot += datetime.datetime.combine(date, hour[1]) - datetime.datetime.combine(date, hour[0]) - datetime.timedelta(hours=8)
+        elif date1 and not date2:
+            # Get total ot for a single date
+            if date1 in self.hour_inputs:
+                for hour in self.hour_inputs[date1]:
+                    total_ot += datetime.datetime.combine(date1, hour[1]) - datetime.datetime.combine(date1, hour[0]) - datetime.timedelta(hours=8)
+        elif date1 and date2:
+            # Get total ot for a range of dates
+            for date, hours in self.hour_inputs.items():
+                if date >= date1 and date <= date2:
+                    for hour in hours:
+                        total_ot += datetime.datetime.combine(date, hour[1]) - datetime.datetime.combine(date, hour[0]) - datetime.timedelta(hours=8)
+        
+        return total_hours, total_ot
 
 
 class Group():
     def __init__(self, name):
         self.name = name
-        self.persons = []
+        self.persons = {}
+        # {name: Person}
         self.allotted_hours = 0.0
         self.allotted_ot = 0.0
-        # [Person]
     
     def get_total_hours(self, date=None):
         if date is None:
             # Get total hours for all time
             total_hours = datetime.timedelta(hours=0)
-            for person in self.persons:
+            for name in self.persons:
+                person = self.persons[name]
                 total_hours += person.get_total_hours()
             return total_hours
         else:
             # Get total hours for a single date
             total_hours = datetime.timedelta(hours=0)
-            for person in self.persons:
+            for name in self.persons:
+                person = self.persons[name]
                 total_hours += person.get_total_hours(date)
             return total_hours
 
@@ -84,7 +105,7 @@ class OTMaster(QtWidgets.QMainWindow):
         self.ui.setupUi(self)
 
         self.groups = {}
-        # {groupobject: [personobject1, personobject2, ...]}
+        # {group_name: Group}
         
         self.current_group = None
         self.current_user = None
@@ -93,6 +114,103 @@ class OTMaster(QtWidgets.QMainWindow):
     
     def setup_triggers(self):
         self.ui.add_timeclock_btn.clicked.connect(self.add_timeclock)
+        self.ui.view_timeclocks_btn.clicked.connect(self.view_timeclocks)
+
+        self.ui.add_group_btn.clicked.connect(self.add_group)
+        self.ui.group_input.returnPressed.connect(self.add_group)
+
+        self.ui.add_person_btn.clicked.connect(self.add_person)
+        self.ui.name_input.returnPressed.connect(self.add_person)
+        
+        self.ui.group_list.clicked.connect(lambda: self.select_group())
+        self.ui.name_list.clicked.connect(lambda: self.select_person())
+    
+    def select_group(self, group_name=None):
+        if group_name is None:
+            group_name = self.ui.group_list.currentItem().text()
+        
+        self.current_group = self.groups[group_name]
+        self.ui.name_list.clear()
+        for name in self.current_group.persons:
+            person = self.current_group.persons[name]
+            self.ui.name_list.addItem(person.name)
+        self.ui.name_list.sortItems()
+        self.ui.name_list.setCurrentRow(0)
+
+        self.ui.allotted_group_hours.setValue(self.current_group.allotted_hours)
+        self.ui.allotted_group_ot.setValue(self.current_group.allotted_ot)
+        self.ui.group_name_val.setText(group_name)
+        
+        self.current_user = None
+    
+    def select_person(self, person_name=None):
+        if person_name is None:
+            person_name = self.ui.name_list.currentItem().text()
+        
+        self.current_user = self.current_group.persons[person_name]
+        self.ui.person_name_val.setText(person_name)
+
+        # Set selection box to the first option
+        self.ui.hours_used_combo_box.setCurrentIndex(0)
+
+        total_hours, total_ot = self.current_user.get_total_hours()
+        self.ui.hours_used_val.setText(str(total_hours))
+        self.ui.total_ot_used_val.setText(str(total_ot))
+    
+    def add_group(self):
+        group_name = self.ui.group_input.text()
+        # Clear input field
+        self.ui.group_input.setText("")
+        if group_name == "":
+            return
+        
+        new_group = Group(group_name)
+        self.groups[group_name] = new_group
+        self.ui.group_list.addItem(group_name)
+        # sort the list
+        self.ui.group_list.sortItems()
+
+        # Select the new group
+        self.select_group(group_name)
+    
+    def add_person(self):
+        person_name = self.ui.name_input.text()
+        if person_name == "":
+            return
+        
+        if not self.current_group:
+            error_message("Error", "No group is currently selected")
+            return
+
+        # Clear input field
+        self.ui.name_input.setText("")
+        
+        new_person = Person(person_name, self.current_group)
+        self.current_group.persons[person_name] = new_person
+        self.ui.name_list.addItem(person_name)
+
+        # sort the list
+        self.ui.name_list.sortItems()
+        
+        self.select_person(person_name)
+    
+    def view_timeclocks(self):
+        # Create new dialog containing a list of all timeclocks for the selected person
+        if not self.current_user:
+            error_message("Error", "No employee is currently selected")
+            return
+        
+        dialog = QtWidgets.QDialog()
+        dialog.setWindowTitle("Timeclocks for " + self.current_user.name)
+        dialog.setFixedSize(400, 400)
+        dialog.setLayout(QtWidgets.QVBoxLayout())
+        listWidget = QtWidgets.QListWidget()
+        dialog.layout().addWidget(listWidget)
+        
+        for dt in self.current_user.hour_inputs:
+            listWidget.addItem(str(dt.ctime()))
+        
+        dialog.exec_()
     
     def save_db(self):
         # Prompt user for file location
@@ -118,7 +236,7 @@ class OTMaster(QtWidgets.QMainWindow):
         if self.current_user is None:
             error_message("Error", "No user is currently selected")
             return
-        self.person.hour_inputs[date] = [start_time, end_time]
+        self.current_user.hour_inputs[date] = [start_time, end_time]
     
     def submit_timeclock(self, dialog, date_enter, start_time_enter, end_time_enter):
         date = date_enter.date().toPyDate()

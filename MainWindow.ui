@@ -37,7 +37,146 @@
         <property name="frameShadow">
          <enum>QFrame::Raised</enum>
         </property>
-        <layout class="QGridLayout" name="gridLayout_4">
+        <layout class="QGridLayout" name="gridLayout_4" rowstretch="1,1,1,1,1,1,1,1,1,1,1,1" rowminimumheight="1,1,1,1,1,1,1,1,1,1,1,1">
+         <item row="1" column="1">
+          <widget class="QLabel" name="person_name_val">
+           <property name="text">
+            <string>No employee selected</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0" colspan="2">
+          <widget class="Line" name="line">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="0">
+          <widget class="QLabel" name="label_7">
+           <property name="font">
+            <font>
+             <pointsize>12</pointsize>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>Overtime Remaining:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QLabel" name="employee_remaining_hours">
+           <property name="text">
+            <string>0.0</string>
+           </property>
+          </widget>
+         </item>
+         <item row="7" column="0">
+          <widget class="QLabel" name="label_3">
+           <property name="font">
+            <font>
+             <pointsize>12</pointsize>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>Allotted Hours:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="9" column="0">
+          <widget class="QLabel" name="label_5">
+           <property name="font">
+            <font>
+             <pointsize>12</pointsize>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>Allotted Overtime:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="9" column="1">
+          <widget class="QDoubleSpinBox" name="allotted_person_ot">
+           <property name="maximum">
+            <double>999999999999.000000000000000</double>
+           </property>
+           <property name="singleStep">
+            <double>10.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="1">
+          <widget class="QLabel" name="employee_remaining_ot">
+           <property name="text">
+            <string>0.0</string>
+           </property>
+          </widget>
+         </item>
+         <item row="10" column="1">
+          <widget class="QCheckBox" name="same_as_group_checkbox">
+           <property name="text">
+            <string>Same as group</string>
+           </property>
+          </widget>
+         </item>
+         <item row="11" column="1">
+          <widget class="QPushButton" name="add_timeclock_btn">
+           <property name="text">
+            <string>Add Timeclock</string>
+           </property>
+          </widget>
+         </item>
+         <item row="11" column="0">
+          <widget class="QPushButton" name="view_timeclocks_btn">
+           <property name="text">
+            <string>View Timeclocks</string>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="0">
+          <widget class="QComboBox" name="hours_used_combo_box">
+           <item>
+            <property name="text">
+             <string>Total hours used:</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Hours used for today:</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Hours used for this week:</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Hours used for this month:</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="name_label">
+           <property name="font">
+            <font>
+             <pointsize>12</pointsize>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>Name:</string>
+           </property>
+          </widget>
+         </item>
          <item row="3" column="0">
           <widget class="QLabel" name="label_6">
            <property name="font">
@@ -67,6 +206,9 @@
                <widget class="QDoubleSpinBox" name="allotted_group_ot">
                 <property name="maximum">
                  <double>999999999999.000000000000000</double>
+                </property>
+                <property name="singleStep">
+                 <double>10.000000000000000</double>
                 </property>
                </widget>
               </item>
@@ -176,41 +318,6 @@
            </item>
           </layout>
          </item>
-         <item row="9" column="1">
-          <widget class="QCheckBox" name="same_as_group_checkbox">
-           <property name="text">
-            <string>Same as group</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="1">
-          <widget class="QLabel" name="person_name_val">
-           <property name="text">
-            <string>No employee selected</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="0" colspan="2">
-          <widget class="Line" name="line">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="0">
-          <widget class="QLabel" name="label_7">
-           <property name="font">
-            <font>
-             <pointsize>12</pointsize>
-             <weight>75</weight>
-             <bold>true</bold>
-            </font>
-           </property>
-           <property name="text">
-            <string>Overtime Remaining:</string>
-           </property>
-          </widget>
-         </item>
          <item row="5" column="1">
           <widget class="QLabel" name="hours_used_val">
            <property name="text">
@@ -218,18 +325,18 @@
            </property>
           </widget>
          </item>
-         <item row="4" column="1">
-          <widget class="QLabel" name="employee_remaining_ot">
-           <property name="text">
-            <string>0.0</string>
+         <item row="7" column="1">
+          <widget class="QDoubleSpinBox" name="allotted_person_hours">
+           <property name="maximum">
+            <double>999999999999.000000000000000</double>
+           </property>
+           <property name="singleStep">
+            <double>10.000000000000000</double>
            </property>
           </widget>
          </item>
-         <item row="8" column="1">
-          <widget class="QDoubleSpinBox" name="allotted_person_ot"/>
-         </item>
-         <item row="1" column="0">
-          <widget class="QLabel" name="name_label">
+         <item row="6" column="0">
+          <widget class="QLabel" name="total_ot_used_label">
            <property name="font">
             <font>
              <pointsize>12</pointsize>
@@ -238,76 +345,14 @@
             </font>
            </property>
            <property name="text">
-            <string>Name:</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="1">
-          <widget class="QLabel" name="employee_remaining_hours">
-           <property name="text">
-            <string>0.0</string>
-           </property>
-          </widget>
-         </item>
-         <item row="10" column="1">
-          <widget class="QPushButton" name="add_timeclock_btn">
-           <property name="text">
-            <string>Add Timeclock</string>
-           </property>
-          </widget>
-         </item>
-         <item row="8" column="0">
-          <widget class="QLabel" name="label_5">
-           <property name="font">
-            <font>
-             <pointsize>12</pointsize>
-             <weight>75</weight>
-             <bold>true</bold>
-            </font>
-           </property>
-           <property name="text">
-            <string>Allotted Overtime:</string>
+            <string>Total Overtime Used:</string>
            </property>
           </widget>
          </item>
          <item row="6" column="1">
-          <widget class="QDoubleSpinBox" name="allotted_person_hours"/>
-         </item>
-         <item row="5" column="0">
-          <widget class="QComboBox" name="hours_used_combo_box">
-           <item>
-            <property name="text">
-             <string>Total hours used:</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Hours used for today:</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Hours used for this week:</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Hours used for this month:</string>
-            </property>
-           </item>
-          </widget>
-         </item>
-         <item row="6" column="0">
-          <widget class="QLabel" name="label_3">
-           <property name="font">
-            <font>
-             <pointsize>12</pointsize>
-             <weight>75</weight>
-             <bold>true</bold>
-            </font>
-           </property>
+          <widget class="QLabel" name="total_ot_used_val">
            <property name="text">
-            <string>Allotted Hours:</string>
+            <string>0.0</string>
            </property>
           </widget>
          </item>
