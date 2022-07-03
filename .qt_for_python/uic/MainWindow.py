@@ -72,6 +72,7 @@ class Ui_MainWindow(object):
         self.employee_remaining_ot.setObjectName("employee_remaining_ot")
         self.gridLayout_4.addWidget(self.employee_remaining_ot, 4, 1, 1, 1)
         self.same_as_group_checkbox = QtWidgets.QCheckBox(self.info_frame)
+        self.same_as_group_checkbox.setChecked(True)
         self.same_as_group_checkbox.setObjectName("same_as_group_checkbox")
         self.gridLayout_4.addWidget(self.same_as_group_checkbox, 10, 1, 1, 1)
         self.add_timeclock_btn = QtWidgets.QPushButton(self.info_frame)

@@ -123,6 +123,9 @@
            <property name="text">
             <string>Same as group</string>
            </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
           </widget>
          </item>
          <item row="11" column="1">

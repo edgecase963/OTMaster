@@ -35,6 +35,8 @@ class Person():
     
     def get_total_hours(self, date1=None, date2=None):
         total_hours = datetime.timedelta(hours=0)
+        total_ot = datetime.timedelta(hours=0)
+        
         if date1 is None:
             # Get total hours for all time
             for start_time in self.hour_inputs:
@@ -46,9 +48,9 @@ class Person():
                 end_time = self.hour_inputs[start_time]
                 if start_time.date() == date1:
                     total_hours += end_time - start_time
-                    if end_time.date() > date1:
+                    if end_time.date() != date1:
                         # Subtract the hours that bled over
-                        total_hours -= end_time.replace(hour=0, minute=0, second=0, microsecond=0) - start_time
+                        total_hours -= datetime.timedelta(days=end_time.date() - date1, hours=end_time.hour, minutes=end_time.minute)
         elif date1 and date2:
             # Get total hours for a range of days
             for start_time in self.hour_inputs:
@@ -58,6 +60,9 @@ class Person():
                     if end_time.date() > date2:
                         # Subtract the hours that bled over
                         total_hours -= end_time - date2
+        
+        # OT calculations now implemented yet
+        return total_hours, total_ot
 
 
 class Group():
@@ -240,16 +245,36 @@ class OTMaster(QtWidgets.QMainWindow):
         else:
             self.ui.group_name_val.setText("No group selected")
             self.ui.allotted_group_hours.setValue(0.0)
+        
+        if self.current_user is not None:
+            self.ui.person_name_val.setText(self.current_user.name)
+            total_hours, total_ot = self.current_user.get_total_hours()
+            self.ui.hours_used_val.setText(str(total_hours))
+            self.ui.total_ot_used_val.setText(str(total_ot))
+        else:
+            self.ui.person_name_val.setText("No employee selected")
+            self.ui.employee_remaining_hours.setText("0.0")
+            self.ui.employee_remaining_ot.setText("0.0")
+            self.ui.hours_used_val.setText("0.0")
+            self.ui.total_ot_used_val.setText("0.0")
+            self.ui.allotted_person_hours.setValue(0.0)
+            self.ui.allotted_person_ot.setValue(0.0)
+            self.ui.same_as_group_checkbox.setChecked(True)
     
     def add_timeclock_to_db(self, start_time, end_time):
         if self.current_user is None:
             error_message("Error", "No user is currently selected")
             return
         self.current_user.hour_inputs[start_time] = end_time
+        self.update_gui()
     
     def submit_timeclock(self, dialog, start_time_entry, end_time_entry):
         start_time = start_time_entry.dateTime().toPyDateTime()
         end_time = end_time_entry.dateTime().toPyDateTime()
+
+        if end_time < start_time:
+            error_message("Error", "End time must be after start time")
+            return
 
         dialog.close()
         # convert total time worked to timedelta
@@ -282,7 +307,7 @@ class OTMaster(QtWidgets.QMainWindow):
         start_time_entry.setDisplayFormat("MM/dd/yyyy hh:mm:ss")
         dialog.layout().addWidget(start_time_entry)
         start_time_entry.setCalendarPopup(True)
-        start_time_entry.setDateTime(QtCore.QDateTime.currentDateTime())
+        start_time_entry.setDateTime(QtCore.QDateTime.currentDateTime().toPyDateTime().replace(hour=0, minute=0, second=0, microsecond=0))
         
         # Add end time label
         end_time_label = QtWidgets.QLabel("End Time")
@@ -293,7 +318,7 @@ class OTMaster(QtWidgets.QMainWindow):
         end_time_entry.setDisplayFormat("MM/dd/yyyy hh:mm:ss")
         dialog.layout().addWidget(end_time_entry)
         end_time_entry.setCalendarPopup(True)
-        end_time_entry.setDateTime(QtCore.QDateTime.currentDateTime())
+        end_time_entry.setDateTime(QtCore.QDateTime.currentDateTime().toPyDateTime().replace(hour=0, minute=0, second=0, microsecond=0))
         
         # Add a button to submit the timeclock
         submit_button = QtWidgets.QPushButton("Submit", dialog)
