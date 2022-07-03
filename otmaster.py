@@ -107,6 +107,10 @@ class OTMaster(QtWidgets.QMainWindow):
         self.groups = {}
         # {group_name: Group}
         
+        self.timeclock_view = {}
+        # Parameters in this dictionary are set when the user decides to view timeclocks
+        # They are temporary
+        
         self.current_group = None
         self.current_user = None
 
@@ -208,9 +212,27 @@ class OTMaster(QtWidgets.QMainWindow):
         dialog.layout().addWidget(listWidget)
         
         for dt in self.current_user.hour_inputs:
-            listWidget.addItem(str(dt.ctime()))
+            listWidget.addItem(str(dt))
+            self.timeclock_view[str(dt)] = dt
+        
+        # Create a right click menu for the list
+        listWidget.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        timeclocks_menu = QtWidgets.QMenu()
+        timeclocks_menu.addAction("Delete", lambda: self.delete_timeclock(listWidget.currentItem()))
+        listWidget.customContextMenuRequested.connect(lambda pos: timeclocks_menu.exec_(listWidget.mapToGlobal(pos)))
         
         dialog.exec_()
+    
+    def delete_timeclock(self, item):
+        if not item:
+            return
+        
+        if not item.text() in self.timeclock_view:
+            error_message("Error", "Unable to delete timeclock")
+            return
+        dt = self.timeclock_view[item.text()]
+        self.current_user.hour_inputs.pop(dt)
+        item.setHidden(True)
     
     def save_db(self):
         # Prompt user for file location
@@ -232,20 +254,21 @@ class OTMaster(QtWidgets.QMainWindow):
             self.ui.group_name_val.setText("No group selected")
             self.ui.allotted_group_hours.setValue(0.0)
     
-    def add_timeclock_to_db(self, date, start_time, end_time):
+    def add_timeclock_to_db(self, start_time, end_time):
         if self.current_user is None:
             error_message("Error", "No user is currently selected")
             return
-        self.current_user.hour_inputs[date] = [start_time, end_time]
+        self.current_user.hour_inputs[start_time] = end_time
     
-    def submit_timeclock(self, dialog, date_enter, start_time_enter, end_time_enter):
-        date = date_enter.date().toPyDate()
-        start_time = start_time_enter.time().toPyTime()
-        end_time = end_time_enter.time().toPyTime()
+    def submit_timeclock(self, dialog, start_time_entry, end_time_entry):
+        start_time = start_time_entry.dateTime().toPyDateTime()
+        end_time = end_time_entry.dateTime().toPyDateTime()
+
         dialog.close()
         # convert total time worked to timedelta
-        time_worked = datetime.datetime.combine(date, end_time) - datetime.datetime.combine(date, start_time)
-        self.add_timeclock_to_db(date, start_time, end_time)
+        total_shift_time = end_time - start_time
+        print("Total time worked: " + str(total_shift_time))
+        self.add_timeclock_to_db(start_time, end_time)
         self.update_gui()
     
     def add_timeclock(self):
@@ -260,25 +283,36 @@ class OTMaster(QtWidgets.QMainWindow):
         dialog.setWindowFlags(QtCore.Qt.WindowTitleHint)
         dialog.setWindowFlags(QtCore.Qt.WindowType_Mask)
         dialog.setWindowFlags(QtCore.Qt.Window)
-        date_enter = QtWidgets.QDateEdit(dialog)
-        start_time_enter = QtWidgets.QTimeEdit(dialog)
-        end_time_enter = QtWidgets.QTimeEdit(dialog)
-        date_enter.setDate(datetime.datetime.now().date())
-        start_time_enter.setTime(datetime.datetime.now().time())
-        end_time_enter.setTime(datetime.datetime.now().time())
-        date_enter.setCalendarPopup(True)
-        start_time_enter.setCalendarPopup(True)
-        end_time_enter.setCalendarPopup(True)
-        date_enter.setDisplayFormat("MM/dd/yyyy")
-        start_time_enter.setDisplayFormat("HH:mm")
-        end_time_enter.setDisplayFormat("HH:mm")
-        date_enter.setGeometry(QtCore.QRect(10, 10, 200, 30))
-        start_time_enter.setGeometry(QtCore.QRect(10, 50, 200, 30))
-        end_time_enter.setGeometry(QtCore.QRect(10, 90, 200, 30))
-        submit_btn = QtWidgets.QPushButton(dialog)
-        submit_btn.setText("Submit")
-        submit_btn.setGeometry(QtCore.QRect(10, 130, 200, 30))
-        submit_btn.clicked.connect(lambda: self.submit_timeclock(dialog, date_enter, start_time_enter, end_time_enter))
+        # Set the layout of the dialog
+        dialog.setLayout(QtWidgets.QVBoxLayout())
+        
+        # Add start time label
+        start_time_label = QtWidgets.QLabel("Start Time")
+        dialog.layout().addWidget(start_time_label)
+        
+        # Add a date/time entry
+        start_time_entry = QtWidgets.QDateTimeEdit(dialog)
+        start_time_entry.setDisplayFormat("MM/dd/yyyy hh:mm:ss")
+        dialog.layout().addWidget(start_time_entry)
+        start_time_entry.setCalendarPopup(True)
+        start_time_entry.setDateTime(QtCore.QDateTime.currentDateTime())
+        
+        # Add end time label
+        end_time_label = QtWidgets.QLabel("End Time")
+        dialog.layout().addWidget(end_time_label)
+        
+        # Add a date/time entry
+        end_time_entry = QtWidgets.QDateTimeEdit(dialog)
+        end_time_entry.setDisplayFormat("MM/dd/yyyy hh:mm:ss")
+        dialog.layout().addWidget(end_time_entry)
+        end_time_entry.setCalendarPopup(True)
+        end_time_entry.setDateTime(QtCore.QDateTime.currentDateTime())
+        
+        # Add a button to submit the timeclock
+        submit_button = QtWidgets.QPushButton("Submit", dialog)
+        submit_button.clicked.connect(
+            lambda: self.submit_timeclock(dialog, start_time_entry, end_time_entry))
+        dialog.layout().addWidget(submit_button)
         dialog.exec_()
     
     def start(self):
