@@ -28,7 +28,7 @@ class Person():
         self.name = name
         self.group = group
         self.hour_inputs = {}
-        # {date: [[datetime_start, datetime_end], [datetime_start, datetime_end], ...]}
+        # {start_datetime: end_datetime, ...}
         self.allotted_hours = 0.0
         self.allotted_ot = 0.0
         self.same_hours_as_group = True
@@ -37,40 +37,27 @@ class Person():
         total_hours = datetime.timedelta(hours=0)
         if date1 is None:
             # Get total hours for all time
-            for date, hours in self.hour_inputs.items():
-                for hour in hours:
-                    total_hours += datetime.datetime.combine(date, hour[1]) - datetime.datetime.combine(date, hour[0])
+            for start_time in self.hour_inputs:
+                end_time = self.hour_inputs[start_time]
+                total_hours += end_time - start_time
         elif date1 and not date2:
-            # Get total hours for a single date
-            if date1 in self.hour_inputs:
-                for hour in self.hour_inputs[date1]:
-                    total_hours += datetime.datetime.combine(date1, hour[1]) - datetime.datetime.combine(date1, hour[0])
+            # Get total hours for a single day
+            for start_time in self.hour_inputs:
+                end_time = self.hour_inputs[start_time]
+                if start_time.date() == date1:
+                    total_hours += end_time - start_time
+                    if end_time.date() > date1:
+                        # Subtract the hours that bled over
+                        total_hours -= end_time.replace(hour=0, minute=0, second=0, microsecond=0) - start_time
         elif date1 and date2:
-            # Get total hours for a range of dates
-            for date, hours in self.hour_inputs.items():
-                if date >= date1 and date <= date2:
-                    for hour in hours:
-                        total_hours += datetime.datetime.combine(date, hour[1]) - datetime.datetime.combine(date, hour[0])
-        
-        total_ot = datetime.timedelta(hours=0)
-        if date1 is None:
-            # Get total ot for all time
-            for date, hours in self.hour_inputs.items():
-                for hour in hours:
-                    total_ot += datetime.datetime.combine(date, hour[1]) - datetime.datetime.combine(date, hour[0]) - datetime.timedelta(hours=8)
-        elif date1 and not date2:
-            # Get total ot for a single date
-            if date1 in self.hour_inputs:
-                for hour in self.hour_inputs[date1]:
-                    total_ot += datetime.datetime.combine(date1, hour[1]) - datetime.datetime.combine(date1, hour[0]) - datetime.timedelta(hours=8)
-        elif date1 and date2:
-            # Get total ot for a range of dates
-            for date, hours in self.hour_inputs.items():
-                if date >= date1 and date <= date2:
-                    for hour in hours:
-                        total_ot += datetime.datetime.combine(date, hour[1]) - datetime.datetime.combine(date, hour[0]) - datetime.timedelta(hours=8)
-        
-        return total_hours, total_ot
+            # Get total hours for a range of days
+            for start_time in self.hour_inputs:
+                end_time = self.hour_inputs[start_time]
+                if start_time.date() >= date1 and start_time.date() <= date2:
+                    total_hours += end_time - start_time
+                    if end_time.date() > date2:
+                        # Subtract the hours that bled over
+                        total_hours -= end_time - date2
 
 
 class Group():
